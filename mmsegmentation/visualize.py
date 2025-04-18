@@ -46,6 +46,18 @@ def visualize_twohands_obj2(img, seg_result, alpha = 0.4):
     vis = img * (1 - alpha) + seg_color * alpha
     return vis
 
+def safe_save_image(path, image):
+    image = np.squeeze(image)  # remove (1,1,3) style dimensions
+
+    if image.dtype == np.float64 or image.dtype == np.float32:
+        # Normalize to [0, 1] if values are larger
+        if image.max() > 1 or image.min() < 0:
+            image = (image - image.min()) / (image.max() - image.min() + 1e-8)
+
+        image = (image * 255).astype(np.uint8)  # convert to uint8
+
+    imsave(path, image)
+
 
 
 if __name__ == '__main__':
@@ -69,12 +81,12 @@ if __name__ == '__main__':
         if args.mode == 'twohands':
             twohands = np.array(Image.open(os.path.join(args.twohands_dir, fname + '.png')))
             twohands_vis = visualize_twohands(img, twohands)
-            imsave(os.path.join(args.vis_dir, fname + '.jpg'), twohands_vis)
+            safe_save_image(os.path.join(args.vis_dir, fname + '.jpg'), twohands_vis)
 
         elif args.mode == 'cb':
             cb = np.array(Image.open(os.path.join(args.cb_dir, fname + '.png')))
             cb_vis = visualize_cb(img, cb)
-            imsave(os.path.join(args.vis_dir, fname + '.jpg'), cb_vis)       
+            safe_save_image(os.path.join(args.vis_dir, fname + '.jpg'), cb_vis)       
 
         elif args.mode == 'twohands_obj1':
             twohands = np.array(Image.open(os.path.join(args.twohands_dir, fname + '.png')))
@@ -84,7 +96,7 @@ if __name__ == '__main__':
             twohands_obj1[obj1 == 2] = 4
             twohands_obj1[obj1 == 3] = 5
             twohands_obj1_vis = visualize_twohands_obj1(img, twohands_obj1)
-            imsave(os.path.join(args.vis_dir, fname + '.jpg'), twohands_obj1_vis)
+            safe_save_image(os.path.join(args.vis_dir, fname + '.jpg'), twohands_obj1_vis)
 
         elif args.mode == 'twohands_obj2':
             twohands = np.array(Image.open(os.path.join(args.twohands_dir, fname + '.png')))
@@ -97,7 +109,7 @@ if __name__ == '__main__':
             twohands_obj2[obj2 == 5] = 7
             twohands_obj2[obj2 == 6] = 8
             twohands_obj2_vis = visualize_twohands_obj2(img, twohands_obj2)
-            imsave(os.path.join(args.vis_dir, fname + '.jpg'), twohands_obj2_vis)
+            safe_save_image(os.path.join(args.vis_dir, fname + '.jpg'), twohands_obj2_vis)
 
         else:
             raise NotImplementedError
